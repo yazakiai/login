@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポータル</title>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #333;
+            --text-sub: #374151;
+            --text-muted: #9ca3af;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ヘッダー：画面上部に固定 */
+        header {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-color);
+            z-index: 100;
+        }
+
+        .header-left h1 {
+            font-size: 24px;
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .header-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .proficiency-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .level-badge {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--primary-color);
+            background: #eef2ff;
+            padding: 2px 10px;
+            border-radius: 12px;
+            white-space: nowrap;
+        }
+
+        .exp-bar-container {
+            width: 80px;
+            height: 6px;
+            background-color: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .exp-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #818cf8);
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .user-meta {
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .username-display {
+            font-weight: 600;
+            color: var(--text-sub);
+        }
+
+        .logout-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 12px;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            color: #ef4444;
+        }
+
+        /* メインコンテンツ：リスト部分をスクロール可能に */
+        main {
+            flex: 1;
+            overflow-y: auto; /* スクロール有効化 */
+            padding: 0 20px 40px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .menu-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* グループタイトルのスタイル */
+        .category-group {
+            margin-top: 30px;
+        }
+
+        .category-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            padding-left: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .list-item {
+            background: var(--card-bg);
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+
+        .list-item:hover {
+            background-color: #fafafa;
+        }
+
+        .list-item:active {
+            transform: scale(0.98);
+            background-color: #f1f1f1;
+        }
+
+        .item-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 15px;
+        }
+
+        .chevron {
+            color: #ccc;
+            font-weight: bold;
+        }
+
+        /* スクロールバーのカスタマイズ（任意） */
+        main::-webkit-scrollbar {
+            width: 6px;
+        }
+        main::-webkit-scrollbar-thumb {
+            background-color: #e5e7eb;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <h1>Portal</h1>
+        </div>
+
+        <div class="header-right">
+            <div class="proficiency-area">
+                <span class="level-badge" id="level-display">レベル --</span>
+                <div class="exp-bar-container">
+                    <div class="exp-bar-fill" id="exp-fill"></div>
+                </div>
+            </div>
+            
+            <div class="user-meta">
+                <span class="username-display" id="username-text">読み込み中...</span>
+                <span class="logout-btn" id="logoutBtn">ログアウト</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="menu-container">
+            
+            <div class="category-group">
+                <div class="category-title">数学Ⅰ</div>
+                <div class="list-item" onclick="confirmAndGo('因数分解', 'page01.html')">
+                    <span class="item-label">1. 因数分解</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('二次関数：基礎', 'page02.html')">
+                    <span class="item-label">2. 二次関数：基礎</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('集合と命題', 'page03.html')">
+                    <span class="item-label">3. 集合と命題</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('三角比：基本', 'page04.html')">
+                    <span class="item-label">4. 三角比：基本</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('データの分析', 'page05.html')">
+                    <span class="item-label">5. データの分析</span>
+                    <span class="chevron">＞</span>
+                </div>
+            </div>
+
+            <div class="category-group">
+                <div class="category-title">数学A</div>
+                <div class="list-item" onclick="confirmAndGo('場合の数', 'page06.html')">
+                    <span class="item-label">6. 場合の数</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('確率', 'page07.html')">
+                    <span class="item-label">7. 確率</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('図形の性質', 'page08.html')">
+                    <span class="item-label">8. 図形の性質</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('整数の性質', 'page09.html')">
+                    <span class="item-label">9. 整数の性質</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('期待値', 'page10.html')">
+                    <span class="item-label">10. 期待値</span>
+                    <span class="chevron">＞</span>
+                </div>
+            </div>
+
+            <div class="category-group">
+                <div class="category-title">数学Ⅱ</div>
+                <div class="list-item" onclick="confirmAndGo('式の計算', 'page11.html')">
+                    <span class="item-label">11. 式の計算</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('複素数と方程式', 'page12.html')">
+                    <span class="item-label">12. 複素数と方程式</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('図形と方程式', 'page13.html')">
+                    <span class="item-label">13. 図形と方程式</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('三角関数', 'page14.html')">
+                    <span class="item-label">14. 三角関数</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('指数・対数関数', 'page15.html')">
+                    <span class="item-label">15. 指数・対数関数</span>
+                    <span class="chevron">＞</span>
+                </div>
+            </div>
+
+            <div class="category-group">
+                <div class="category-title">数学B</div>
+                <div class="list-item" onclick="confirmAndGo('平面上のベクトル', 'page16.html')">
+                    <span class="item-label">16. 平面上ベクトル</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('空間のベクトル', 'page17.html')">
+                    <span class="item-label">17. 空間ベクトル</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('数列の基礎', 'page18.html')">
+                    <span class="item-label">18. 数列の基礎</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('等差・等比数列', 'page19.html')">
+                    <span class="item-label">19. 等差・等比数列</span>
+                    <span class="chevron">＞</span>
+                </div>
+                <div class="list-item" onclick="confirmAndGo('漸化式', 'page20.html')">
+                    <span class="item-label">20. 漸化式</span>
+                    <span class="chevron">＞</span>
+                </div>
+            </div>
+
+            <div class="category-group">
+                <div class="category-title">数学Ⅲ / ユーザー設定</div>
+                <div class="list-item" onclick="confirmAndGo('ユーザー設定', 'profile.html')">
+                    <span class="item-label">⚙ ユーザー設定</span>
+                    <span class="chevron">＞</span>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDVkkBw0FeY044MHjbHLtDHa8Grsy2FUk",
+            authDomain: "bingo-f2408.firebaseapp.com",
+            databaseURL: "https://bingo-f2408-default-rtdb.firebaseio.com",
+            projectId: "bingo-f2408",
+            storageBucket: "bingo-f2408.firebasestorage.app",
+            messagingSenderId: "1063410811511",
+            appId: "1:1063410811511:web:6e239da51fccebb9ccfc72",
+            measurementId: "G-M403DYYSKM"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.addEventListener('load', async () => {
+            const storedName = localStorage.getItem('loginUser');
+            const nameElement = document.getElementById('username-text');
+            const levelElement = document.getElementById('level-display');
+            const expFillElement = document.getElementById('exp-fill');
+
+            if (!storedName) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            nameElement.textContent = storedName;
+
+            try {
+                const userRef = ref(db, 'users/' + storedName);
+                const snapshot = await get(userRef);
+
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    const level = userData.level || 1;
+                    const exp = userData.exp || 0; 
+
+                    levelElement.textContent = `レベル ${level}`;
+                    expFillElement.style.width = exp + "%";
+                } else {
+                    levelElement.textContent = "レベル 1";
+                    expFillElement.style.width = "0%";
+                }
+            } catch (error) {
+                console.error("データ取得エラー:", error);
+                levelElement.textContent = "エラー";
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            if (confirm("ログアウトしますか？")) {
+                localStorage.removeItem('loginUser');
+                window.location.href = "login.html";
+            }
+        });
+
+        window.confirmAndGo = function(name, url) {
+            if (confirm(`${name} に移動しますか？`)) {
+                window.location.href = url;
+            }
+        };
+    </script>
+</body>
+</html>
