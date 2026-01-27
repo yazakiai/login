@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>図形と方程式 演習 - 不等式の領域</title>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
@@ -26,6 +26,7 @@
             align-items: center;
             min-height: 100vh;
             color: var(--primary);
+            overflow: hidden; 
         }
 
         #app {
@@ -33,7 +34,7 @@
             width: 100%;
             max-width: 600px;
             height: 100vh;
-            max-height: 900px;
+            max-height: 100%;
             display: flex;
             flex-direction: column;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
@@ -107,7 +108,7 @@
         }
 
         .options-container {
-            flex: 0 1 auto;
+            flex: 1;
             padding: 0 20px;
             overflow-y: auto;
             display: flex;
@@ -177,7 +178,7 @@
         .option-btn.dimmed { opacity: 0.4; pointer-events: none; }
 
         .hint-container {
-            margin: 0 20px 5px 20px;
+            margin: 0 20px 20px 20px;
             text-align: left;
             flex-shrink: 0;
         }
@@ -217,44 +218,86 @@
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        #feedback-area {
-            background: #f9f9f9;
-            border-top: 1px solid var(--border-color);
-            padding: 20px;
-            border-radius: 20px 20px 0 0;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
-            animation: slideUp 0.3s ease-out;
-            position: absolute; 
-            bottom: 0;
+        /* --- モーダル改善：Viewport固定 (position: fixed) --- */
+        #modal-backdrop {
+            position: fixed;
+            top: 0;
             left: 0;
-            width: 100%;
-            box-sizing: border-box;
-            z-index: 100;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        #modal-backdrop.show {
+            opacity: 1;
+            visibility: visible;
         }
 
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        #feedback-area {
+            position: fixed; 
+            bottom: 0;
+            left: 50%;
+            transform: translate(-50%, 100%);
+            width: 100%;
+            max-width: 600px;
+            background: #fff;
+            padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+            box-sizing: border-box;
+            border-top: 1px solid var(--border-color);
+            border-radius: 24px 24px 0 0;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+            z-index: 2100;
+            transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.1);
+            display: flex;
+            flex-direction: column;
+            max-height: 70vh;
+        }
+
+        #feedback-area.show {
+            transform: translate(-50%, 0);
+        }
+
+        .feedback-content-scroll {
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding-right: 5px;
+        }
 
         .result-badge {
             display: inline-block;
-            padding: 5px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: bold;
             color: white;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
         .bg-correct { background: var(--success); }
         .bg-wrong { background: var(--error); }
 
         .explanation-text {
-            font-size: 1rem; color: #555; line-height: 1.5; margin-bottom: 20px;
+            font-size: 1rem; color: #444; line-height: 1.5; margin: 0;
         }
 
         .next-btn {
-            width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer;
+            width: 100%; 
+            padding: 18px; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 16px; 
+            font-size: 1.1rem; 
+            font-weight: bold; 
+            cursor: pointer;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-        .next-btn:hover { background: #000; }
+        .next-btn:active { transform: scale(0.98); background: #000; }
 
+        /* --- リザルト --- */
         .center-screen {
             flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; text-align: center;
         }
@@ -264,11 +307,7 @@
         }
 
         .lv-up-announcement {
-            color: #ff9500;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-top: 10px;
-            animation: bounce 0.5s infinite alternate;
+            color: #ff9500; font-weight: bold; font-size: 1.2rem; margin-top: 10px; animation: bounce 0.5s infinite alternate;
         }
         @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
     </style>
@@ -276,6 +315,8 @@
 <body>
 
 <div id="app">
+    <div id="modal-backdrop"></div>
+
     <div id="quiz-screen" style="height:100%; display:flex; flex-direction:column;">
         <div class="progress-header">
             <div class="header-top-row">
@@ -304,12 +345,12 @@
             <div id="hint-content" class="hint-content hidden"></div>
         </div>
 
-        <div id="feedback-area" class="hidden">
-            <div>
+        <div id="feedback-area">
+            <div class="feedback-content-scroll">
                 <span id="result-badge" class="result-badge"></span>
                 <p id="explanation-text" class="explanation-text"></p>
             </div>
-            <button class="next-btn" onclick="nextQuestion()">次の問題へ</button>
+            <button class="next-btn" onclick="nextQuestion()">次の問題へ進む</button>
         </div>
     </div>
 
@@ -354,7 +395,6 @@
                 const data = snapshot.val();
                 let currentLevel = data.level || 1;
                 let currentExp = data.exp || 0;
-                
                 let addedExp = correctCount * 10;
                 currentExp += addedExp;
                 
@@ -382,6 +422,10 @@
 </script>
 
 <script>
+    // 効果音の設定
+    const soundYes = new Audio('yes.mp3');
+    const soundNo = new Audio('no.mp3');
+
     const database = [
         { q: "不等式 \\( y \\geqq -2x + 4 \\) の表す領域は？", opts: ["直線 \\( y = -2x + 4 \\) の上側（境界線を含む）", "直線 \\( y = -2x + 4 \\) の下側（境界線を含む）", "直線 \\( y = -2x + 4 \\) の上側（境界線を含まない）", "直線 \\( y = -2x + 4 \\) の下側（境界線を含まない）"], correct: 0, hint: "\\( y \\geqq f(x) \\) は直線の「上側」で、等号があれば境界線を含みます。", exp: "\\( y \\geqq -2x + 4 \\) なので、直線のグラフの上側です。等号があるため境界線を含みます。" },
         { q: "不等式 \\( 2x - y - 2 < 0 \\) の表す領域は？", opts: ["直線 \\( y = 2x - 2 \\) の上側（境界線を含まない）", "直線 \\( y = 2x - 2 \\) の下側（境界線を含まない）", "直線 \\( y = 2x - 2 \\) の上側（境界線を含む）", "直線 \\( y = 2x - 2 \\) の下側（境界線を含む）"], correct: 0, hint: "\\( y \\) について解くと \\( y > 2x - 2 \\) となります。", exp: "\\( -y < -2x + 2 \\) より \\( y > 2x - 2 \\) となるため、直線の「上側」です。" },
@@ -390,19 +434,7 @@
         { q: "不等式 \\( y \\leqq -x - 2 \\) の表す領域は？", opts: ["直線 \\( y = -x - 2 \\) の下側（境界線を含む）", "直線 \\( y = -x - 2 \\) の上側（境界線を含む）", "直線 \\( y = -x - 2 \\) の下側（境界線を含まない）", "直線 \\( y = -x - 2 \\) の上側（境界線を含まない）"], correct: 0, hint: "\\( y \\leqq f(x) \\) は直線の「下側」です。", exp: "\\( y \\leqq -x - 2 \\) より直線の「下側」です。等号があるため境界線を含みます。" },
         { q: "不等式 \\( 3x + y - 6 > 0 \\) の表す領域は？", opts: ["直線 \\( y = -3x + 6 \\) の上側（境界線を含まない）", "直線 \\( y = -3x + 6 \\) の下側（境界線を含まない）", "直線 \\( y = -3x + 6 \\) の上側（境界線を含む）", "直線 \\( y = -3x + 6 \\) の下側（境界線を含む）"], correct: 0, hint: "\\( y > -3x + 6 \\) と変形します。", exp: "\\( y > -3x + 6 \\) となるので、直線の「上側」を表します。" },
         { q: "不等式 \\( 2x - y + 4 \\leqq 0 \\) の表す領域は？", opts: ["直線 \\( y = 2x + 4 \\) の上側（境界線を含む）", "直線 \\( y = 2x + 4 \\) の下側（境界線を含む）", "直線 \\( y = 2x + 4 \\) の上側（境界線を含まない）", "直線 \\( y = 2x + 4 \\) の下側（境界線を含まない）"], correct: 0, hint: "\\( -y \\leqq -2x - 4 \\) から不等号の向きに注意して変形します。", exp: "\\( y \\geqq 2x + 4 \\) となるため、直線の「上側」かつ境界線を含みます。" },
-        { q: "不等式 \\( y > \\frac{1}{2}x - 1 \\) の表す領域は？", opts: ["直線 \\( y = \\frac{1}{2}x - 1 \\) の上側（境界線を含まない）", "直線 \\( y = \\frac{1}{2}x - 1 \\) の下側（境界線を含まない）", "直線 \\( y = \\frac{1}{2}x - 1 \\) の上側（境界線を含む）", "直線 \\( y = \\frac{1}{2}x - 1 \\) の下側（境界線を含む）"], correct: 0, hint: "\\( y > f(x) \\) なので上側です。", exp: "\\( y > \\frac{1}{2}x - 1 \\) なので「上側」かつ「含まない」です。" },
-        { q: "不等式 \\( 4x + 2y - 8 \\geqq 0 \\) の表す領域は？", opts: ["直線 \\( y = -2x + 4 \\) の上側（境界線を含む）", "直線 \\( y = -2x + 4 \\) の下側（境界線を含む）", "直線 \\( y = -2x + 4 \\) の上側（境界線を含まない）", "直線 \\( y = -2x + 4 \\) の下側（境界線を含まない）"], correct: 0, hint: "\\( 2y \\geqq -4x + 8 \\) をさらに \\( y \\) について解きます。", exp: "\\( y \\geqq -2x + 4 \\) となるので、直線の「上側」かつ境界線を含みます。" },
-        { q: "不等式 \\( x - y + 1 < 0 \\) の表す領域は？", opts: ["直線 \\( y = x + 1 \\) の上側（境界線を含まない）", "直線 \\( y = x + 1 \\) の下側（境界線を含まない）", "直線 \\( y = x + 1 \\) の上側（境界線を含む）", "直線 \\( y = x + 1 \\) の下側（境界線を含む）"], correct: 0, hint: "\\( -y < -x - 1 \\) から両辺を -1 で割ります。", exp: "\\( y > x + 1 \\) となり、直線の「上側」を表します。" },
-        { q: "不等式 \\( y \\leqq 2x \\) の表す領域は？", opts: ["直線 \\( y = 2x \\) の下側（境界線を含む）", "直線 \\( y = 2x \\) の上側（境界線を含む）", "直線 \\( y = 2x \\) の下側（境界線を含まない）", "直線 \\( y = 2x \\) の上側（境界線を含まない）"], correct: 0, hint: "原点を通る直線の「下側」です。", exp: "\\( y \\leqq 2x \\) なので「下側」かつ「境界線を含む」です。" },
-        { q: "不等式 \\( 3x - y > 0 \\) の表す領域は？", opts: ["直線 \\( y = 3x \\) の下側（境界線を含まない）", "直線 \\( y = 3x \\) の上側（境界線を含まない）", "直線 \\( y = 3x \\) の下側（境界線を含む）", "直線 \\( y = 3x \\) の上側（境界線を含む）"], correct: 0, hint: "\\( -y > -3x \\) の変形に注意。", exp: "\\( y < 3x \\) となるので直線の「下側」を表します。" },
-        { q: "不等式 \\( y \\geqq -x \\) の表す領域は？", opts: ["直線 \\( y = -x \\) の上側（境界線を含む）", "直線 \\( y = -x \\) の下側（境界線を含む）", "直線 \\( y = -x \\) の上側（境界線を含まない）", "直線 \\( y = -x \\) の下側（境界線を含まない）"], correct: 0, hint: "\\( y \\geqq f(x) \\) の基本形です。", exp: "\\( y \\geqq -x \\) より「上側」かつ「含む」です。" },
-        { q: "不等式 \\( 2x + 3y - 6 < 0 \\) の表す領域は？", opts: ["直線 \\( y = -\\frac{2}{3}x + 2 \\) の下側（境界線を含まない）", "直線 \\( y = -\\frac{2}{3}x + 2 \\) の上側（境界線を含まない）", "直線 \\( y = -\\frac{2}{3}x + 2 \\) の下側（境界線を含む）", "直線 \\( y = -\\frac{2}{3}x + 2 \\) の上側（境界線を含む）"], correct: 0, hint: "\\( 3y < -2x + 6 \\) から変形します。", exp: "\\( y < -\\frac{2}{3}x + 2 \\) なので直線の「下側」です。" },
-        { q: "不等式 \\( y < -5 \\) の表す領域は？", opts: ["直線 \\( y = -5 \\) の下側（境界線を含まない）", "直線 \\( y = -5 \\) の上側（境界線を含まない）", "直線 \\( y = -5 \\) の下側（境界線を含む）", "直線 \\( y = -5 \\) の上側（境界線を含む）"], correct: 0, hint: "水平な直線の上下を考えます。", exp: "\\( y \\) の値が -5 より小さい範囲なので、直線の下側です。" },
-        { q: "不等式 \\( x + 2y + 4 \\geqq 0 \\) の表す領域は？", opts: ["直線 \\( y = -\\frac{1}{2}x - 2 \\) の上側（境界線を含む）", "直線 \\( y = -\\frac{1}{2}x - 2 \\) の下側（境界線を含む）", "直線 \\( y = -\\frac{1}{2}x - 2 \\) の上側（境界線を含まない）", "直線 \\( y = -\\frac{1}{2}x - 2 \\) の下側（境界線を含まない）"], correct: 0, hint: "\\( 2y \\geqq -x - 4 \\) と変形します。", exp: "\\( y \\geqq -\\frac{1}{2}x - 2 \\) より「上側」かつ「含む」です。" },
-        { q: "不等式 \\( y \\geqq 4x - 8 \\) の表す領域は？", opts: ["直線 \\( y = 4x - 8 \\) の上側（境界線を含む）", "直線 \\( y = 4x - 8 \\) の下側（境界線を含む）", "直線 \\( y = 4x - 8 \\) の上側（境界線を含まない）", "直線 \\( y = 4x - 8 \\) の下側（境界線を含まない）"], correct: 0, hint: "\\( y \\geqq \\dots \\) はグラフの上側です。", exp: "\\( y \\geqq 4x - 8 \\) より「上側」かつ「含む」です。" },
-        { q: "不等式 \\( 5x - y + 2 > 0 \\) の表す領域は？", opts: ["直線 \\( y = 5x + 2 \\) の下側（境界線を含まない）", "直線 \\( y = 5x + 2 \\) の上側（境界線を含まない）", "直線 \\( y = 5x + 2 \\) の下側（境界線を含む）", "直線 \\( y = 5x + 2 \\) の上側（境界線を含む）"], correct: 0, hint: "\\( -y > -5x - 2 \\) の変形に注意。", exp: "\\( y < 5x + 2 \\) となるので、直線の「下側」を表します。" },
-        { q: "不等式 \\( y + 2 \\leqq 0 \\) の表す領域は？", opts: ["直線 \\( y = -2 \\) の下側（境界線を含む）", "直線 \\( y = -2 \\) の上側（境界線を含む）", "直線 \\( y = -2 \\) の下側（境界線を含まない）", "直線 \\( y = -2 \\) の上側（境界線を含まない）"], correct: 0, hint: "\\( y \\leqq -2 \\) と変形します。", exp: "\\( y \\leqq -2 \\) なので、直線の下側かつ境界線を含みます。" },
-        { q: "不等式 \\( x - 3y + 6 < 0 \\) の表す領域は？", opts: ["直線 \\( y = \\frac{1}{3}x + 2 \\) の上側（境界線を含まない）", "直線 \\( y = \\frac{1}{3}x + 2 \\) の下側（境界線を含まない）", "直線 \\( y = \\frac{1}{3}x + 2 \\) の上側（境界線を含む）", "直線 \\( y = \\frac{1}{3}x + 2 \\) の下側（境界線を含む）"], correct: 0, hint: "\\( -3y < -x - 6 \\) から、-3 で割るときに不等号を逆転させます。", exp: "\\( y > \\frac{1}{3}x + 2 \\) となるため、直線の「上側」を表します。" }
+        { q: "不等式 \\( y > \\frac{1}{2}x - 1 \\) の表す領域は？", opts: ["直線 \\( y = \\frac{1}{2}x - 1 \\) の上側（境界線を含まない）", "直線 \\( y = \\frac{1}{2}x - 1 \\) の下側（境界線を含まない）", "直線 \\( y = \\frac{1}{2}x - 1 \\) の上側（境界線を含む）", "直線 \\( y = \\frac{1}{2}x - 1 \\) の下側（境界線を含む）"], correct: 0, hint: "\\( y > f(x) \\) なので上側です。", exp: "\\( y > \\frac{1}{2}x - 1 \\) なので「上側」かつ「含まない」です。" }
     ];
 
     let quizState = {
@@ -429,7 +461,10 @@
         quizState.answered = false;
         const q = quizState.questions[quizState.currentIdx];
 
-        document.getElementById('feedback-area').classList.add('hidden');
+        // モーダルとバックドロップを非表示
+        document.getElementById('feedback-area').classList.remove('show');
+        document.getElementById('modal-backdrop').classList.remove('show');
+        
         document.getElementById('hint-content').classList.add('hidden');
         document.getElementById('hint-arrow').className = "hint-arrow closed";
 
@@ -466,6 +501,15 @@
         const isCorrect = (selectedBtn.dataset.isCorrect === "true");
         const btns = document.querySelectorAll('.option-btn');
 
+        // 音声再生
+        if (isCorrect) {
+            soundYes.currentTime = 0;
+            soundYes.play();
+        } else {
+            soundNo.currentTime = 0;
+            soundNo.play();
+        }
+
         btns.forEach((btn) => {
             btn.disabled = true;
             if (btn.dataset.isCorrect === "true") {
@@ -484,7 +528,10 @@
         badge.className = "result-badge " + (isCorrect ? "bg-correct" : "bg-wrong");
 
         document.getElementById('explanation-text').innerHTML = quizState.questions[quizState.currentIdx].exp;
-        document.getElementById('feedback-area').classList.remove('hidden');
+        
+        // モーダルとバックドロップを確実に表示
+        document.getElementById('feedback-area').classList.add('show');
+        document.getElementById('modal-backdrop').classList.add('show');
         
         if (window.MathJax) MathJax.typesetPromise();
     }
@@ -499,6 +546,9 @@
     }
 
     function showResult() {
+        document.getElementById('feedback-area').classList.remove('show');
+        document.getElementById('modal-backdrop').classList.remove('show');
+        
         document.getElementById('quiz-screen').classList.add('hidden');
         document.getElementById('result-screen').classList.remove('hidden');
         
