@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - Firebase連携</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-card {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 320px;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 14px;
+            margin: 8px 0;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            box-sizing: border-box;
+            background-color: #f9f9f9;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        button:disabled {
+            background-color: #ccc;
+        }
+        .info {
+            font-size: 12px;
+            color: #888;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2 style="margin-top:0">Welcome</h2>
+        <input type="text" id="username" placeholder="ユーザーネーム">
+        <input type="password" id="password" placeholder="パスワード">
+        <button id="authBtn">ログイン / 新規登録</button>
+        <p class="info">※初めての名前なら自動で登録されます</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // 提供された設定情報
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDVkkBw0FeY044MHjbHLtDHa8Grsy2FUk",
+            authDomain: "bingo-f2408.firebaseapp.com",
+            databaseURL: "https://bingo-f2408-default-rtdb.firebaseio.com",
+            projectId: "bingo-f2408",
+            storageBucket: "bingo-f2408.firebasestorage.app",
+            messagingSenderId: "1063410811511",
+            appId: "1:1063410811511:web:6e239da51fccebb9ccfc72",
+            measurementId: "G-M403DYYSKM"
+        };
+
+        // Firebaseの初期化
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // ボタンクリック時の処理
+        document.getElementById('authBtn').addEventListener('click', async () => {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const btn = document.getElementById('authBtn');
+
+            if (!user || !pass) {
+                alert("ユーザー名とパスワードを入力してください");
+                return;
+            }
+
+            btn.disabled = true; // 処理中の二重クリック防止
+
+            try {
+                // データベース内の "users/ユーザー名" の場所を参照
+                const userRef = ref(db, 'users/' + user);
+                const snapshot = await get(userRef);
+
+                if (!snapshot.exists()) {
+                    // 1. 新規登録：データが存在しない場合、新しく作成
+                    await set(userRef, {
+                        password: pass,
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                    // 【修正ポイント】localStorageにユーザー名を保存
+                    localStorage.setItem('loginUser', user);
+                    
+                    window.location.href = "portal.html";
+                } else {
+                    // 2. ログイン照合：データが存在する場合、パスワードをチェック
+                    const userData = snapshot.val();
+                    if (userData.password === pass) {
+                        
+                        // 【修正ポイント】localStorageにユーザー名を保存
+                        localStorage.setItem('loginUser', user);
+                        
+                        window.location.href = "portal.html";
+                    } else {
+                        alert("パスワードが正しくありません。");
+                        btn.disabled = false;
+                    }
+                }
+            } catch (error) {
+                console.error("エラーが発生しました:", error);
+                alert("データベース接続エラーが発生しました。");
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
