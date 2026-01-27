@@ -218,7 +218,7 @@
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- モーダル改善：Viewport固定 (position: fixed) --- */
+        /* --- モーダル改善 --- */
         #modal-backdrop {
             position: fixed;
             top: 0;
@@ -244,16 +244,17 @@
             width: 100%;
             max-width: 600px;
             background: #fff;
-            padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+            /* 修正：padding-topを増やして高さを出し、下部の余白を最適化 */
+            padding: 45px 20px calc(25px + env(safe-area-inset-bottom)); 
             box-sizing: border-box;
             border-top: 1px solid var(--border-color);
-            border-radius: 24px 24px 0 0;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+            border-radius: 30px 30px 0 0;
+            box-shadow: 0 -12px 50px rgba(0,0,0,0.2);
             z-index: 2100;
             transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.1);
             display: flex;
             flex-direction: column;
-            max-height: 70vh;
+            max-height: 75vh;
         }
 
         #feedback-area.show {
@@ -263,7 +264,10 @@
         .feedback-content-scroll {
             overflow-y: auto;
             margin-bottom: 15px;
-            padding-right: 5px;
+            /* 修正：コンテンツを上に詰める */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
         }
 
         .result-badge {
@@ -273,13 +277,16 @@
             font-size: 1rem;
             font-weight: bold;
             color: white;
-            margin-bottom: 12px;
+            margin-bottom: 8px; /* 詰める */
         }
         .bg-correct { background: var(--success); }
         .bg-wrong { background: var(--error); }
 
         .explanation-text {
-            font-size: 1rem; color: #444; line-height: 1.5; margin: 0;
+            font-size: 1.05rem; 
+            color: #444; 
+            line-height: 1.4; 
+            margin: 0 0 10px 0; /* 詰める */
         }
 
         .next-btn {
@@ -293,11 +300,10 @@
             font-weight: bold; 
             cursor: pointer;
             flex-shrink: 0;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
-        .next-btn:active { transform: scale(0.98); background: #000; }
+        .next-btn:active { transform: scale(0.97); background: #000; }
 
-        /* --- リザルト --- */
         .center-screen {
             flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; text-align: center;
         }
@@ -309,7 +315,7 @@
         .lv-up-announcement {
             color: #ff9500; font-weight: bold; font-size: 1.2rem; margin-top: 10px; animation: bounce 0.5s infinite alternate;
         }
-        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.1); } }
+        @keyframes bounce { from { transform: scale(1); } to { transform: scale(1.08); } }
     </style>
 </head>
 <body>
@@ -461,7 +467,6 @@
         quizState.answered = false;
         const q = quizState.questions[quizState.currentIdx];
 
-        // モーダルとバックドロップを非表示
         document.getElementById('feedback-area').classList.remove('show');
         document.getElementById('modal-backdrop').classList.remove('show');
         
@@ -501,7 +506,6 @@
         const isCorrect = (selectedBtn.dataset.isCorrect === "true");
         const btns = document.querySelectorAll('.option-btn');
 
-        // 音声再生
         if (isCorrect) {
             soundYes.currentTime = 0;
             soundYes.play();
@@ -529,7 +533,6 @@
 
         document.getElementById('explanation-text').innerHTML = quizState.questions[quizState.currentIdx].exp;
         
-        // モーダルとバックドロップを確実に表示
         document.getElementById('feedback-area').classList.add('show');
         document.getElementById('modal-backdrop').classList.add('show');
         
