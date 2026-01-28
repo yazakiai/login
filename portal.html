@@ -42,6 +42,7 @@
             background-color: var(--bg-color);
             z-index: 100;
             border-bottom: 1px solid #eee;
+            flex-shrink: 0; /* ヘッダーが潰れないように固定 */
         }
 
         .header-left {
@@ -116,7 +117,7 @@
             flex-direction: column;
             align-items: center;
             background-color: #f9f9f9; 
-            scroll-behavior: smooth; /* スムーズなスクロールを有効化 */
+            scroll-behavior: smooth;
         }
 
         .stage-map {
@@ -136,6 +137,10 @@
             cursor: pointer;
             transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 2;
+
+            /* 【修正】スクロール時にヘッダーを避けるためのマージン設定 */
+            scroll-margin-top: 120px;
+            scroll-margin-bottom: 120px;
         }
 
         .step:active {
@@ -183,7 +188,7 @@
             content: '✔';
             background-color: var(--clear-color);
             border-color: var(--clear-color);
-            color: #ffffff !important; /* チェックマークの色を白に固定 */
+            color: #ffffff !important; 
             transform: scale(1.1);
         }
 
@@ -255,7 +260,6 @@
         const buttonImages = ['m01.jpg', 'm02.jpg', 'm03.jpg'];
         const storedName = localStorage.getItem('loginUser');
 
-        // 初回ロード判定フラグ
         let isInitialLoad = true;
 
         window.addEventListener('load', async () => {
@@ -280,7 +284,6 @@
             document.getElementById('exp-fill').style.width = exp + "%";
         }
 
-        // マスを生成
         for (let i = 1; i <= totalSteps; i++) {
             const step = document.createElement('div');
             step.className = 'step';
@@ -315,7 +318,6 @@
             stageContainer.appendChild(step);
         }
 
-        // リアルタイム進捗反映と中央スクロール
         const stagesRef = ref(db, 'stages');
         onValue(stagesRef, (snapshot) => {
             const data = snapshot.val() || {};
@@ -333,7 +335,7 @@
                     stepEl.classList.remove('is-cleared');
                     if (!firstIncompleteFound) {
                         stepEl.classList.add('is-current');
-                        currentStepElement = stepEl; // 現在地のエレメントを保持
+                        currentStepElement = stepEl;
                         firstIncompleteFound = true;
                     } else {
                         stepEl.classList.remove('is-current');
@@ -341,10 +343,9 @@
                 }
             }
 
-            // 初回読み込み時のみ、現在地を画面中央へスクロール
             if (isInitialLoad && currentStepElement) {
-                // 少しだけ待機してレンダリングを確実にする
                 setTimeout(() => {
+                    // block: 'center' を維持したまま、CSSのscroll-marginが余白を確保します
                     currentStepElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 300);
                 isInitialLoad = false;
