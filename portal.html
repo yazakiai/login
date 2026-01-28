@@ -29,7 +29,7 @@
             overflow: hidden;
         }
 
-        /* --- ヘッダー：レイアウト調整 --- */
+        /* --- ヘッダー：レイアウト --- */
         header {
             width: 100%;
             max-width: 600px;
@@ -37,14 +37,13 @@
             padding: 15px 20px;
             box-sizing: border-box;
             display: flex;
-            justify-content: space-between; /* 左右に分ける */
+            justify-content: space-between;
             align-items: center;
             background-color: var(--bg-color);
             z-index: 100;
             border-bottom: 1px solid #eee;
         }
 
-        /* 左側：ネーム、レベル、ゲージを縦に並べる */
         .header-left {
             display: flex;
             flex-direction: column;
@@ -88,7 +87,6 @@
             transition: width 0.5s ease-in-out;
         }
 
-        /* 右側：ログアウトボタンのみ */
         .header-right {
             display: flex;
             align-items: center;
@@ -159,6 +157,7 @@
             filter: grayscale(100%) opacity(0.5);
         }
 
+        /* 番号ラベルの基本スタイル */
         .step::after {
             content: attr(data-step);
             position: absolute;
@@ -174,17 +173,18 @@
             justify-content: center;
             font-size: 14px;
             font-weight: bold;
-            color: #333;
+            color: #333; /* 通常時の番号の色 */
             transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             z-index: 4;
         }
 
+        /* クリア時のチェックマークスタイル（修正箇所） */
         .step.is-cleared::after {
             content: '✔';
             background-color: var(--clear-color);
             border-color: var(--clear-color);
-            color: white;
+            color: #ffffff !important; /* チェックマークの色を白に固定 */
             transform: scale(1.1);
         }
 
