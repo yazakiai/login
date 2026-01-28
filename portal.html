@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ポータル</title>
+    <title>Portal - ステージマップ</title>
     <style>
         :root {
             --primary-color: #4f46e5;
@@ -12,6 +12,10 @@
             --text-main: #333;
             --text-sub: #374151;
             --text-muted: #9ca3af;
+            /* 双六用設定 */
+            --step-size: 80px;
+            --clear-color: #4CAF50;
+            --aura-color: rgba(255, 140, 0, 1.0);
         }
 
         body {
@@ -22,9 +26,10 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden; /* 全体スクロールはmainに任せる */
         }
 
-        /* ヘッダー：画面上部に固定 */
+        /* --- ヘッダー：固定エリア --- */
         header {
             width: 100%;
             max-width: 600px;
@@ -36,6 +41,7 @@
             align-items: center;
             background-color: var(--bg-color);
             z-index: 100;
+            border-bottom: 1px solid #eee;
         }
 
         .header-left h1 {
@@ -106,74 +112,109 @@
             color: #ef4444;
         }
 
-        /* メインコンテンツ：リスト部分をスクロール可能に */
+        /* --- メイン：双六マップスクロールエリア --- */
         main {
             flex: 1;
-            overflow-y: auto; /* スクロール有効化 */
-            padding: 0 20px 40px;
+            overflow-y: auto;
+            padding: 40px 0 80px;
             -webkit-overflow-scrolling: touch;
-        }
-
-        .menu-container {
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        /* グループタイトルのスタイル */
-        .category-group {
-            margin-top: 30px;
-        }
-
-        .category-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--primary-color);
-            margin-bottom: 12px;
-            padding-left: 8px;
-            border-left: 4px solid var(--primary-color);
-        }
-
-        .list-item {
-            background: var(--card-bg);
-            padding: 18px 20px;
-            margin-bottom: 12px;
-            border-radius: 15px;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
+            background-color: #f9f9f9; /* かなり白に近いグレー */
+        }
+
+        .stage-map {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .step {
+            position: relative;
+            width: var(--step-size);
+            height: var(--step-size);
+            margin-bottom: 50px;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            transition: transform 0.1s, background-color 0.2s;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 2;
         }
 
-        .list-item:hover {
-            background-color: #fafafa;
+        .step:active {
+            transform: scale(0.9);
         }
 
-        .list-item:active {
-            transform: scale(0.98);
-            background-color: #f1f1f1;
+        .step img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+            display: block;
+            position: relative;
+            z-index: 2;
+            transition: filter 0.5s ease;
         }
 
-        .item-label {
-            font-weight: 600;
-            color: #333;
-            font-size: 15px;
+        /* 未挑戦かつ現在地ではないマスをグレーアウト */
+        .step:not(.is-cleared):not(.is-current) img {
+            filter: grayscale(100%) opacity(0.5);
         }
 
-        .chevron {
-            color: #ccc;
+        /* クリア時のチェックマーク */
+        .step::after {
+            content: attr(data-step);
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
             font-weight: bold;
+            color: #333;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 4;
         }
 
-        /* スクロールバーのカスタマイズ（任意） */
-        main::-webkit-scrollbar {
-            width: 6px;
+        .step.is-cleared::after {
+            content: '✔';
+            background-color: var(--clear-color);
+            border-color: var(--clear-color);
+            color: white;
+            transform: scale(1.1);
         }
-        main::-webkit-scrollbar-thumb {
-            background-color: #e5e7eb;
-            border-radius: 10px;
+
+        /* 現在地の伸縮オーラ（輪） */
+        @keyframes aura-ring {
+            0% { transform: scale(1.0); opacity: 0.1; border-width: 3px; }
+            100% { transform: scale(1.3); opacity: 1.0; border-width: 6px; }
         }
+
+        .step.is-current::before {
+            content: '';
+            position: absolute;
+            top: -3px; left: -3px; right: -3px; bottom: -3px;
+            border-radius: 50%;
+            border: 4.5px solid var(--aura-color);
+            animation: aura-ring 1.2s infinite ease-in-out alternate;
+            z-index: 1;
+            box-sizing: border-box;
+        }
+
+        .step img:not([src]) {
+            background: #ccc;
+        }
+
     </style>
 </head>
 <body>
@@ -199,118 +240,13 @@
     </header>
 
     <main>
-        <div class="menu-container">
-            
-            <div class="category-group">
-                <div class="category-title">数学Ⅰ</div>
-                <div class="list-item" onclick="confirmAndGo('因数分解', 'page01.html')">
-                    <span class="item-label">1. 因数分解</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('二次関数：基礎', 'page02.html')">
-                    <span class="item-label">2. 二次関数：基礎</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('集合と命題', 'page03.html')">
-                    <span class="item-label">3. 集合と命題</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('三角比：基本', 'page04.html')">
-                    <span class="item-label">4. 三角比：基本</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('データの分析', 'page05.html')">
-                    <span class="item-label">5. データの分析</span>
-                    <span class="chevron">＞</span>
-                </div>
+        <div class="stage-map" id="stage-container">
             </div>
-
-            <div class="category-group">
-                <div class="category-title">数学A</div>
-                <div class="list-item" onclick="confirmAndGo('場合の数', 'page06.html')">
-                    <span class="item-label">6. 場合の数</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('確率', 'page07.html')">
-                    <span class="item-label">7. 確率</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('図形の性質', 'page08.html')">
-                    <span class="item-label">8. 図形の性質</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('整数の性質', 'page09.html')">
-                    <span class="item-label">9. 整数の性質</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('期待値', 'page10.html')">
-                    <span class="item-label">10. 期待値</span>
-                    <span class="chevron">＞</span>
-                </div>
-            </div>
-
-            <div class="category-group">
-                <div class="category-title">数学Ⅱ</div>
-                <div class="list-item" onclick="confirmAndGo('式の計算', 'page11.html')">
-                    <span class="item-label">11. 式の計算</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('複素数と方程式', 'page12.html')">
-                    <span class="item-label">12. 複素数と方程式</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('図形と方程式', 'page13.html')">
-                    <span class="item-label">13. 図形と方程式</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('三角関数', 'page14.html')">
-                    <span class="item-label">14. 三角関数</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('指数・対数関数', 'page15.html')">
-                    <span class="item-label">15. 指数・対数関数</span>
-                    <span class="chevron">＞</span>
-                </div>
-            </div>
-
-            <div class="category-group">
-                <div class="category-title">数学B</div>
-                <div class="list-item" onclick="confirmAndGo('平面上のベクトル', 'page16.html')">
-                    <span class="item-label">16. 平面上ベクトル</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('空間のベクトル', 'page17.html')">
-                    <span class="item-label">17. 空間ベクトル</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('数列の基礎', 'page18.html')">
-                    <span class="item-label">18. 数列の基礎</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('等差・等比数列', 'page19.html')">
-                    <span class="item-label">19. 等差・等比数列</span>
-                    <span class="chevron">＞</span>
-                </div>
-                <div class="list-item" onclick="confirmAndGo('漸化式', 'page20.html')">
-                    <span class="item-label">20. 漸化式</span>
-                    <span class="chevron">＞</span>
-                </div>
-            </div>
-
-            <div class="category-group">
-                <div class="category-title">数学Ⅲ / ユーザー設定</div>
-                <div class="list-item" onclick="confirmAndGo('ユーザー設定', 'profile.html')">
-                    <span class="item-label">⚙ ユーザー設定</span>
-                    <span class="chevron">＞</span>
-                </div>
-            </div>
-
-        </div>
     </main>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCDVkkBw0FeY044MHjbHLtDHa8Grsy2FUk",
@@ -326,52 +262,106 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        window.addEventListener('load', async () => {
-            const storedName = localStorage.getItem('loginUser');
-            const nameElement = document.getElementById('username-text');
-            const levelElement = document.getElementById('level-display');
-            const expFillElement = document.getElementById('exp-fill');
+        const totalSteps = 30;
+        const stageContainer = document.getElementById('stage-container');
+        const buttonImages = ['m01.jpg', 'm02.jpg', 'm03.jpg'];
+        const storedName = localStorage.getItem('loginUser');
 
+        // --- 1. ログインチェック & ユーザー情報取得 ---
+        window.addEventListener('load', async () => {
             if (!storedName) {
                 window.location.href = "login.html";
                 return;
             }
+            document.getElementById('username-text').textContent = storedName;
 
-            nameElement.textContent = storedName;
-
+            // ユーザー情報の初期取得
             try {
                 const userRef = ref(db, 'users/' + storedName);
                 const snapshot = await get(userRef);
-
                 if (snapshot.exists()) {
                     const userData = snapshot.val();
-                    const level = userData.level || 1;
-                    const exp = userData.exp || 0; 
-
-                    levelElement.textContent = `レベル ${level}`;
-                    expFillElement.style.width = exp + "%";
-                } else {
-                    levelElement.textContent = "レベル 1";
-                    expFillElement.style.width = "0%";
+                    updateProfileUI(userData.level || 1, userData.exp || 0);
                 }
-            } catch (error) {
-                console.error("データ取得エラー:", error);
-                levelElement.textContent = "エラー";
+            } catch (e) { console.error(e); }
+        });
+
+        function updateProfileUI(level, exp) {
+            document.getElementById('level-display').textContent = `レベル ${level}`;
+            document.getElementById('exp-fill').style.width = exp + "%";
+        }
+
+        // --- 2. 双六マップの生成 ---
+        for (let i = 1; i <= totalSteps; i++) {
+            const step = document.createElement('div');
+            step.className = 'step';
+            step.id = `step-${i}`;
+            step.dataset.step = i;
+
+            const typeIndex = (i - 1) % 3;
+            const img = document.createElement('img');
+            img.src = buttonImages[typeIndex];
+            
+            img.onerror = function() {
+                this.style.backgroundColor = ['#ffadad', '#ffd6a5', '#fdffb6'][typeIndex];
+            };
+
+            step.appendChild(img);
+
+            // S字カーブ配置
+            const amplitude = 120;
+            const frequency = 0.6;
+            const offset = Math.sin(i * frequency) * amplitude;
+            step.style.marginLeft = `${offset}px`;
+
+            // クリックイベント
+            step.onclick = () => {
+                const url = `page${String(i).padStart(2, '0')}.html`;
+                if (confirm(`ステージ ${i} に挑戦しますか？`)) {
+                    // Firebaseのステージクリア状態を更新
+                    const stepRef = ref(db, `stages/step${i}`);
+                    set(stepRef, true).then(() => {
+                        window.location.href = url;
+                    });
+                }
+            };
+
+            stageContainer.appendChild(step);
+        }
+
+        // --- 3. ステージ状態のリアルタイム反映 ---
+        const stagesRef = ref(db, 'stages');
+        onValue(stagesRef, (snapshot) => {
+            const data = snapshot.val() || {};
+            let firstIncompleteFound = false;
+
+            for (let i = 1; i <= totalSteps; i++) {
+                const stepEl = document.getElementById(`step-${i}`);
+                const isCleared = data[`step${i}`] === true;
+
+                if (isCleared) {
+                    stepEl.classList.add('is-cleared');
+                    stepEl.classList.remove('is-current');
+                } else {
+                    stepEl.classList.remove('is-cleared');
+                    // まだクリアしていない最初のマスを現在地にする
+                    if (!firstIncompleteFound) {
+                        stepEl.classList.add('is-current');
+                        firstIncompleteFound = true;
+                    } else {
+                        stepEl.classList.remove('is-current');
+                    }
+                }
             }
         });
 
+        // ログアウト処理
         document.getElementById('logoutBtn').addEventListener('click', () => {
             if (confirm("ログアウトしますか？")) {
                 localStorage.removeItem('loginUser');
                 window.location.href = "login.html";
             }
         });
-
-        window.confirmAndGo = function(name, url) {
-            if (confirm(`${name} に移動しますか？`)) {
-                window.location.href = url;
-            }
-        };
     </script>
 </body>
 </html>
