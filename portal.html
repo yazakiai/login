@@ -42,7 +42,7 @@
             background-color: var(--bg-color);
             z-index: 100;
             border-bottom: 1px solid #eee;
-            flex-shrink: 0; /* ヘッダーが潰れないように固定 */
+            flex-shrink: 0;
         }
 
         .header-left {
@@ -137,8 +137,6 @@
             cursor: pointer;
             transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 2;
-
-            /* 【修正】スクロール時にヘッダーを避けるためのマージン設定 */
             scroll-margin-top: 120px;
             scroll-margin-bottom: 120px;
         }
@@ -270,6 +268,7 @@
             document.getElementById('username-text').textContent = storedName;
 
             try {
+                // ユーザー情報の初期取得 (レベル・経験値)
                 const userRef = ref(db, 'users/' + storedName);
                 const snapshot = await get(userRef);
                 if (snapshot.exists()) {
@@ -284,6 +283,7 @@
             document.getElementById('exp-fill').style.width = exp + "%";
         }
 
+        // マスを生成
         for (let i = 1; i <= totalSteps; i++) {
             const step = document.createElement('div');
             step.className = 'step';
@@ -305,10 +305,12 @@
             const offset = Math.sin(i * frequency) * amplitude;
             step.style.marginLeft = `${offset}px`;
 
+            // クリックイベント
             step.onclick = () => {
                 const url = `page${String(i).padStart(2, '0')}.html`;
                 if (confirm(`ステージ ${i} に挑戦しますか？`)) {
-                    const stepRef = ref(db, `stages/step${i}`);
+                    // 【修正】保存先をユーザー個別の階層に変更
+                    const stepRef = ref(db, `users/${storedName}/stages/step${i}`);
                     set(stepRef, true).then(() => {
                         window.location.href = url;
                     });
@@ -318,7 +320,8 @@
             stageContainer.appendChild(step);
         }
 
-        const stagesRef = ref(db, 'stages');
+        // 【修正】監視対象をユーザー個別のステージ進捗に変更
+        const stagesRef = ref(db, `users/${storedName}/stages`);
         onValue(stagesRef, (snapshot) => {
             const data = snapshot.val() || {};
             let firstIncompleteFound = false;
@@ -345,7 +348,6 @@
 
             if (isInitialLoad && currentStepElement) {
                 setTimeout(() => {
-                    // block: 'center' を維持したまま、CSSのscroll-marginが余白を確保します
                     currentStepElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }, 300);
                 isInitialLoad = false;
