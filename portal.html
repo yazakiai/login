@@ -116,6 +116,7 @@
             flex-direction: column;
             align-items: center;
             background-color: #f9f9f9; 
+            scroll-behavior: smooth; /* スムーズなスクロールを有効化 */
         }
 
         .stage-map {
@@ -157,7 +158,6 @@
             filter: grayscale(100%) opacity(0.5);
         }
 
-        /* 番号ラベルの基本スタイル */
         .step::after {
             content: attr(data-step);
             position: absolute;
@@ -173,13 +173,12 @@
             justify-content: center;
             font-size: 14px;
             font-weight: bold;
-            color: #333; /* 通常時の番号の色 */
+            color: #333;
             transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             z-index: 4;
         }
 
-        /* クリア時のチェックマークスタイル（修正箇所） */
         .step.is-cleared::after {
             content: '✔';
             background-color: var(--clear-color);
@@ -228,7 +227,7 @@
         </div>
     </header>
 
-    <main>
+    <main id="main-scroll-area">
         <div class="stage-map" id="stage-container">
             </div>
     </main>
@@ -256,6 +255,9 @@
         const buttonImages = ['m01.jpg', 'm02.jpg', 'm03.jpg'];
         const storedName = localStorage.getItem('loginUser');
 
+        // 初回ロード判定フラグ
+        let isInitialLoad = true;
+
         window.addEventListener('load', async () => {
             if (!storedName) {
                 window.location.href = "login.html";
@@ -278,6 +280,7 @@
             document.getElementById('exp-fill').style.width = exp + "%";
         }
 
+        // マスを生成
         for (let i = 1; i <= totalSteps; i++) {
             const step = document.createElement('div');
             step.className = 'step';
@@ -312,10 +315,12 @@
             stageContainer.appendChild(step);
         }
 
+        // リアルタイム進捗反映と中央スクロール
         const stagesRef = ref(db, 'stages');
         onValue(stagesRef, (snapshot) => {
             const data = snapshot.val() || {};
             let firstIncompleteFound = false;
+            let currentStepElement = null;
 
             for (let i = 1; i <= totalSteps; i++) {
                 const stepEl = document.getElementById(`step-${i}`);
@@ -328,11 +333,21 @@
                     stepEl.classList.remove('is-cleared');
                     if (!firstIncompleteFound) {
                         stepEl.classList.add('is-current');
+                        currentStepElement = stepEl; // 現在地のエレメントを保持
                         firstIncompleteFound = true;
                     } else {
                         stepEl.classList.remove('is-current');
                     }
                 }
+            }
+
+            // 初回読み込み時のみ、現在地を画面中央へスクロール
+            if (isInitialLoad && currentStepElement) {
+                // 少しだけ待機してレンダリングを確実にする
+                setTimeout(() => {
+                    currentStepElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+                isInitialLoad = false;
             }
         });
 
